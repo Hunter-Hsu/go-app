@@ -59,7 +59,7 @@ func (s MongoStore) Collection(name string) *mgm.Collection {
 	return mgm.NewCollection(s.db, name)
 }
 
-func (s *MongoStore) Connect(protocol string, username string, password string, hosts string, databaseName string, params string, opts ...*options.ClientOptions) {
+func (s *MongoStore) Connect(protocol string, username string, password string, hosts string, databaseName string, params string, opts ...*options.ClientOptions) error {
 	connectURL := generateConnectURL(protocol, username, password, hosts, databaseName, params)
 
 	opts = append(opts, options.Client().ApplyURI(connectURL))
@@ -69,21 +69,20 @@ func (s *MongoStore) Connect(protocol string, username string, password string, 
 	ctx := context.Background()
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	ctxWithCancel, cancel := context.WithTimeout(ctx, MONGODB_CONNECTION_TIMEOUT)
 	defer cancel()
 
-	// The Client.Ping method can be used to verify that the deployment is successfully connected and
-	// the Client was correctly configured.
 	err = client.Ping(ctxWithCancel, nil)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	s.client = client
 	s.db = client.Database(databaseName)
+	return nil
 }
 
 func NewMongoStore(env *env.Env, logger *logger.Logger) *MongoStore {
