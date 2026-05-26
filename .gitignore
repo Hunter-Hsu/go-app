@@ -49,3 +49,10 @@ Thumbs.db
 *.wmv
 
 .env
+
+# IDE
+.vscode/
+
+# AI tooling
+.aidlc-rule-details/
+aidlc-docs/
