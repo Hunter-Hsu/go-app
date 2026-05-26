@@ -7,9 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"reflect"
 	"sync"
-	"time"
 
 	"github.com/cloudwego/kitex/pkg/endpoint"
 	"github.com/cloudwego/kitex/server"
@@ -76,27 +74,16 @@ func (s *KitexServer) RegisterGracefullyShutdown(lc fx.Lifecycle) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			s.wg.Add(1)
-			go s.server.Run()
+			go func() {
+				defer s.wg.Done()
+				s.server.Run()
+			}()
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			// Manually trigger exit signal to kitex and let it handle the graceful shutdown
+			// Trigger Kitex's exit signal; Run() calls Stop() internally and returns
+			// once cleanup is complete — no need to poll internal fields.
 			s.kitexExit <- nil
-
-			go func() {
-				for {
-					time.Sleep(100 * time.Millisecond)
-
-					// Check if kitex cleaned up the server internally
-					// https://github.com/cloudwego/kitex/blob/e93d7b77e5d4239d054b81e3e0dee9290a4eccd3/server/server.go#L228
-					svr := reflect.ValueOf(s.server).Elem().FieldByName("svr")
-					if svr.IsNil() {
-						s.wg.Done()
-						break
-					}
-				}
-			}()
-
 			s.wg.Wait()
 			s.logger.Info("Bye")
 			return nil
