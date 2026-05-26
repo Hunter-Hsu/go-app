@@ -56,3 +56,5 @@ Thumbs.db
 # AI tooling
 .aidlc-rule-details/
 aidlc-docs/
+.mcp.json
+.claude/settings.local.json
