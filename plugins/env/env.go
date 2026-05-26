@@ -14,8 +14,6 @@ func init() {
 	plugins.Registry = append(plugins.Registry, NewEnv)
 }
 
-var env *Env
-
 type Env struct {
 	defaultValues map[string]string
 }
@@ -40,7 +38,7 @@ func (e Env) GetEnvInt(key string) int {
 }
 
 func NewEnv() *Env {
-	env = &Env{
+	e := &Env{
 		defaultValues: map[string]string{
 			"ENVIRONMENT": "development",
 		},
@@ -61,5 +59,5 @@ func NewEnv() *Env {
 		log.Print("No .env file found", err)
 	}
 
-	return env
+	return e
 }

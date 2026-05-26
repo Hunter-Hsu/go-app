@@ -13,23 +13,24 @@ func init() {
 	plugins.Registry = append(plugins.Registry, NewNewrelicAgent)
 }
 
-var app *newrelic.Application
+var configOptions []newrelic.ConfigOption
 
-type NewrelicAgent struct{}
+type NewrelicAgent struct {
+	app *newrelic.Application
+}
 
 func (a NewrelicAgent) App() *newrelic.Application {
-	return app
+	return a.app
 }
 
 func Configure(configs ...newrelic.ConfigOption) {
-	a, err := newrelic.NewApplication(configs...)
-	if err != nil {
-		logrus.Error("Unable to load Newrelic application")
-	}
-
-	app = a
+	configOptions = configs
 }
 
 func NewNewrelicAgent() *NewrelicAgent {
-	return &NewrelicAgent{}
+	a, err := newrelic.NewApplication(configOptions...)
+	if err != nil {
+		logrus.Error("Unable to load Newrelic application")
+	}
+	return &NewrelicAgent{app: a}
 }

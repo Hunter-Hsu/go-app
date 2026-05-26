@@ -13,8 +13,6 @@ func init() {
 	plugins.Registry = append(plugins.Registry, NewLogger)
 }
 
-var logger *Logger
-
 type Logger struct {
 	logrus.Logger
 }
@@ -52,9 +50,7 @@ func NewLogger(env *env.Env) *Logger {
 	}
 	l.SetOutput(os.Stdout)
 
-	logger = &Logger{
+	return &Logger{
 		Logger: l,
 	}
-
-	return logger
 }
