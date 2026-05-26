@@ -14,6 +14,7 @@ import (
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/newrelic/go-agent/v3/integrations/nrpkgerrors"
 	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/shoplineapp/go-app/common"
 	"github.com/shoplineapp/go-app/plugins"
 	app_grpc "github.com/shoplineapp/go-app/plugins/grpc"
 	newrelic_plugin "github.com/shoplineapp/go-app/plugins/newrelic"
@@ -68,12 +69,12 @@ func (i NewrelicInterceptor) Handler() grpc.UnaryServerInterceptor {
 		txn := i.nr.App().StartTransaction(info.FullMethod)
 		defer txn.End()
 
-		traceId, _ := ctx.Value("trace_id").(string)
+		traceId := common.GetTraceID(ctx)
 
 		txn.SetWebRequest(newRequest(ctx, info.FullMethod))
 		txn.AddAttribute("TraceId", traceId)
 
-		ctx = context.WithValue(newrelic.NewContext(ctx, txn), "trace_id", traceId)
+		ctx = common.NewContextWithTraceID(newrelic.NewContext(ctx, txn), traceId)
 
 		resp, err = handler(ctx, req)
 

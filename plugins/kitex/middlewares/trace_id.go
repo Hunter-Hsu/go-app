@@ -5,6 +5,7 @@ import (
 
 	"github.com/cloudwego/kitex/pkg/endpoint"
 	"github.com/google/uuid"
+	"github.com/shoplineapp/go-app/common"
 	"github.com/shoplineapp/go-app/plugins"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -26,7 +27,7 @@ func (m KitexTraceIDMiddleware) Handler(next endpoint.Endpoint) endpoint.Endpoin
 			}
 		}
 
-		ctx = context.WithValue(ctx, "trace_id", traceId)
+		ctx = common.NewContextWithTraceID(ctx, traceId)
 		grpc.SetHeader(ctx, metadata.Pairs("x-trace-id", traceId))
 		err := next(ctx, request, response)
 		return err

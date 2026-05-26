@@ -10,6 +10,7 @@ import (
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/newrelic/go-agent/v3/integrations/nrpkgerrors"
 	"github.com/newrelic/go-agent/v3/newrelic"
+	"github.com/shoplineapp/go-app/common"
 	"github.com/shoplineapp/go-app/plugins"
 	newrelic_plugin "github.com/shoplineapp/go-app/plugins/newrelic"
 	"google.golang.org/grpc/metadata"
@@ -61,11 +62,11 @@ func (m KitexNewrelicMiddleware) Handler(next endpoint.Endpoint) endpoint.Endpoi
 		txn := m.nr.App().StartTransaction(txnName)
 		defer txn.End()
 
-		traceId, _ := ctx.Value("trace_id").(string)
+		traceId := common.GetTraceID(ctx)
 		txn.SetWebRequest(newRequest(ctx, txnName))
 		txn.AddAttribute("TraceId", traceId)
 
-		ctx = context.WithValue(newrelic.NewContext(ctx, txn), "trace_id", traceId)
+		ctx = common.NewContextWithTraceID(newrelic.NewContext(ctx, txn), traceId)
 
 		err := next(ctx, request, response)
 

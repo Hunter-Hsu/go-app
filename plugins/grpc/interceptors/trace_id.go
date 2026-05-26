@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/shoplineapp/go-app/common"
 	"github.com/shoplineapp/go-app/plugins"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -30,7 +31,7 @@ func (i TraceIdInterceptor) Handler() grpc.UnaryServerInterceptor {
 			}
 		}
 
-		ctx = context.WithValue(ctx, "trace_id", traceId)
+		ctx = common.NewContextWithTraceID(ctx, traceId)
 
 		grpc.SetHeader(ctx, metadata.Pairs("x-trace-id", traceId))
 

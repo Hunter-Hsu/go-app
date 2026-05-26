@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/shoplineapp/go-app/common"
 	"github.com/shoplineapp/go-app/plugins"
 	"github.com/shoplineapp/go-app/plugins/opentelemetry"
 	"go.opentelemetry.io/otel/attribute"
@@ -34,7 +35,7 @@ func (i OtelInterceptor) Handler() grpc.UnaryServerInterceptor {
 			return handler(ctx, req)
 		}
 
-		if v, ok := ctx.Value("trace_id").(string); ok && v != "" {
+		if v := common.GetTraceID(ctx); v != "" {
 			traceIDHex := strings.ReplaceAll(v, "-", "")
 			if tid, err := trace.TraceIDFromHex(traceIDHex); err == nil && tid.IsValid() {
 				spanContext := trace.SpanContextFromContext(ctx)

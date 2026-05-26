@@ -39,15 +39,10 @@ type RequestLogInterceptor struct {
 
 type contextKey string
 
-// var (
-// 	ContextKeyTraceId        = contextKey("trace_id")
-// 	ContextKeyLogger         = contextKey("logger")
-// 	ContextKeyControllerData = contextKey("controller_data")
-// )
-
-func (c contextKey) String() string {
-	return string(c)
-}
+const (
+	controllerDataKey contextKey = "controller_data"
+	loggerKey         contextKey = "logger"
+)
 
 func StructToMap(s interface{}) (res map[string]interface{}, err error) {
 	data, _ := json.Marshal(s)
@@ -110,21 +105,20 @@ func markReqParams(whiteListKeys []interface{}, key string, value interface{}, r
 }
 
 func SetWhitelistReqKeysInContext(ctx context.Context, keys []interface{}) {
-	controllerData := ctx.Value("controller_data").(map[string]interface{})
+	controllerData := ctx.Value(controllerDataKey).(map[string]interface{})
 	controllerData["whitelist_req_keys"] = keys
 }
 
 func (i RequestLogInterceptor) Handler() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (_ interface{}, err error) {
-		// initial a ContextKeyControllerData
-		ctx = context.WithValue(ctx, "controller_data", map[string]interface{}{
+		ctx = context.WithValue(ctx, controllerDataKey, map[string]interface{}{
 			"whitelist_req_keys": []interface{}{},
 		})
 
 		service := path.Dir(info.FullMethod)[1:]
 
 		log := i.logger.WithFields(logrus.Fields{
-			"trace_id": ctx.Value("trace_id"),
+			"trace_id": common.GetTraceID(ctx),
 			"service":  service,
 			"method":   path.Base(info.FullMethod),
 		})
@@ -134,7 +128,7 @@ func (i RequestLogInterceptor) Handler() grpc.UnaryServerInterceptor {
 			return handler(ctx, req)
 		}
 
-		ctx = context.WithValue(ctx, "logger", log)
+		ctx = context.WithValue(ctx, loggerKey, log)
 
 		log.Info("Incoming Request")
 

@@ -6,10 +6,15 @@ import (
 
 	"github.com/cloudwego/kitex/pkg/endpoint"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
+	"github.com/shoplineapp/go-app/common"
 	"github.com/shoplineapp/go-app/plugins"
 	"github.com/shoplineapp/go-app/plugins/logger"
 	"github.com/sirupsen/logrus"
 )
+
+type middlewareKey string
+
+const loggerKey middlewareKey = "logger"
 
 func init() {
 	plugins.Registry = append(plugins.Registry, NewKitexRequestLogMiddleware)
@@ -24,9 +29,9 @@ func (m KitexRequestLogMiddleware) Handler(next endpoint.Endpoint) endpoint.Endp
 		ri := rpcinfo.GetRPCInfo(ctx)
 		logger := logrus.WithFields(logrus.Fields{
 			"Method":   ri.To().Method(),
-			"trace_id": ctx.Value("trace_id"),
+			"trace_id": common.GetTraceID(ctx),
 		})
-		ctx = context.WithValue(ctx, "logger", logger)
+		ctx = context.WithValue(ctx, loggerKey, logger)
 
 		logger.Info("Incoming Request")
 
